@@ -18,6 +18,12 @@ from urllib.parse import urlparse
 import fsspec
 import io
 
+import functools
+from torch.distributed.fsdp import FullyShardedDataParallel as FSDP
+from torch.distributed.fsdp.wrap import transformer_auto_wrap_policy
+from model import Block
+
+
 @dataclass
 class TrainerConfig:
     max_epochs: int = None
@@ -27,6 +33,7 @@ class TrainerConfig:
     snapshot_path: Optional[str] = None
     save_every: int = None
     use_amp: bool = None
+    distributed_method: str = 'ddp'
 
 @dataclass
 class Snapshot:
@@ -63,8 +70,27 @@ class Trainer:
         if self.config.snapshot_path is None:
             self.config.snapshot_path = "snapshot.pt"
         self._load_snapshot()
-        # wrap with DDP. this step will synch model across all the processes.
+        # wrap with distributed_method. this step will synch model across all the processes.
+        {
+            "ddp": self._ddp,
+            "fsdp": self._fsdp
+        }[self.config.distributed_method]()
+
+    def _ddp(self):
         self.model = DDP(self.model, device_ids=[self.local_rank])
+
+    def _fsdp(self):
+        auto_wrap_policy = functools.partial(
+            transformer_auto_wrap_policy,
+            transformer_layer_cls={
+                Block,
+            }
+        )
+        self.model = FSDP(
+            self.model,
+            auto_wrap_policy=auto_wrap_policy,
+            device_id=self.local_rank
+        )
         
     def _prepare_dataloader(self, dataset: Dataset):
         return DataLoader(
