@@ -61,7 +61,7 @@ class Trainer:
         self.test_loader = self._prepare_dataloader(test_dataset) if test_dataset else None
         # initialize train states
         self.epochs_run = 0
-        self.model = model.to(self.local_rank)
+        self.model = model
         self.optimizer = optimizer        
         self.save_every = self.config.save_every
         if self.config.use_amp:
@@ -79,6 +79,7 @@ class Trainer:
         print(self.model)
 
     def _ddp(self):
+        self.model = self.model.to(self.local_rank)
         self.model = DDP(self.model, device_ids=[self.local_rank])
 
     def _fsdp(self):
