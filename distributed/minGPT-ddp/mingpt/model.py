@@ -120,7 +120,7 @@ class GPT(nn.Module):
 
         # report number of parameters (note we don't count the decoder parameters in lm_head)
         n_params = sum(p.numel() for p in self.blocks.parameters())
-        print("number of parameters: %.2fM" % (n_params/1e6,))
+        print("number of parameters in transformer: %.2fM" % (n_params/1e6,))
 
     def _set_model_config(self, config):
         type_given = config.model_type is not None

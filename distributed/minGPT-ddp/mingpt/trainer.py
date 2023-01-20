@@ -71,10 +71,12 @@ class Trainer:
             self.config.snapshot_path = "snapshot.pt"
         self._load_snapshot()
         # wrap with distributed_method. this step will synch model across all the processes.
+        print(f"Using {self.config.distributed_method} ...")
         {
             "ddp": self._ddp,
             "fsdp": self._fsdp
         }[self.config.distributed_method]()
+        print(self.model)
 
     def _ddp(self):
         self.model = DDP(self.model, device_ids=[self.local_rank])
