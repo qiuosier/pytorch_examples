@@ -100,7 +100,6 @@ class Trainer:
             self.model,
             auto_wrap_policy=auto_wrap_policy,
             cpu_offload=CPUOffload(offload_params=True),
-            device_id=self.local_rank
         )
         
     def _prepare_dataloader(self, dataset: Dataset):
