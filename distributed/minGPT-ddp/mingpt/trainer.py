@@ -95,6 +95,7 @@ class Trainer:
                 Block,
             }
         )
+        torch.cuda.set_device(self.local_rank)
         self.model = FSDP(
             self.model,
             auto_wrap_policy=auto_wrap_policy,
