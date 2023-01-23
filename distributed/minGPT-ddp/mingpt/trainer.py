@@ -152,9 +152,8 @@ class Trainer:
         dataloader.sampler.set_epoch(epoch)
         for iter, (source, targets) in enumerate(dataloader):
             step_type = "Train" if train else "Eval"
-            if self.config.distributed_method != "fsdp":
-                source = source.to(self.local_rank)
-                targets = targets.to(self.local_rank)
+            source = source.to(self.local_rank)
+            targets = targets.to(self.local_rank)
             batch_loss = self._run_batch(source, targets, train)
             if iter % 100 == 0:
                 print(f"[GPU{self.global_rank}] Epoch {epoch} | Iter {iter} | {step_type} Loss {batch_loss:.5f}")
