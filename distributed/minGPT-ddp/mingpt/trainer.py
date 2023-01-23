@@ -7,6 +7,7 @@ from dataclasses import dataclass, asdict
 from collections import OrderedDict
 from typing import Optional, Any, Dict
 import os
+import time
 
 import torch
 from torch.utils.data import Dataset, DataLoader
@@ -177,7 +178,9 @@ class Trainer:
     def train(self):
         for epoch in range(self.epochs_run, self.config.max_epochs):
             epoch += 1
+            epoch_start_time = time.time()
             self._run_epoch(epoch, self.train_loader, train=True)
+            print(f"Epoch {epoch} Training Time: {str(int(time.time() - epoch_start_time))}")
             if self.local_rank == 0 and epoch % self.save_every == 0:
                 self._save_snapshot(epoch)
             # eval run
