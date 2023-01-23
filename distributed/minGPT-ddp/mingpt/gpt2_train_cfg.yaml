@@ -16,6 +16,7 @@ trainer_config:
   save_every: 3
   use_amp: True
   distributed_method: ddp
+  cpu_offload: False
 optimizer_config:
   weight_decay: 0.1
   learning_rate: 0.0003
