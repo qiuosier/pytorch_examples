@@ -96,7 +96,14 @@ class Trainer:
                 Block,
             }
         )
-        cpu_offload = CPUOffload(offload_params=True) if self.config.cpu_offload else None
+        # Model must be on CPU when cpu offload is enabled
+        # Otherwise model should be on CUDA
+        if cpu_offload:
+            cpu_offload = CPUOffload(offload_params=True)
+        else:
+            cpu_offload = None
+            self.model = self.model.to(self.local_rank)
+
         torch.cuda.set_device(self.local_rank)
         self.model = FSDP(
             self.model,
