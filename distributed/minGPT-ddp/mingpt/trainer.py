@@ -83,6 +83,12 @@ class Trainer:
         self.model = DDP(self.model, device_ids=[self.local_rank])
 
     def _fsdp(self):
+        print(f"CUDA VERSION: {torch.version.cuda}")
+        print(f"BF16 Supported: {torch.cuda.is_bf16_supported()}")
+        if torch.distributed.is_nccl_available():
+            print(f"NCCL Version: {torch.cuda.nccl.version()}")
+        else:
+            print("NCCL Not Available.")
         auto_wrap_policy = functools.partial(
             transformer_auto_wrap_policy,
             transformer_layer_cls={
