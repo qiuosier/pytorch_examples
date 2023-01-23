@@ -19,7 +19,7 @@ import fsspec
 import io
 
 import functools
-from torch.distributed.fsdp import FullyShardedDataParallel as FSDP
+from torch.distributed.fsdp import FullyShardedDataParallel as FSDP, CPUOffload
 from torch.distributed.fsdp.wrap import transformer_auto_wrap_policy
 from model import Block
 
@@ -92,6 +92,7 @@ class Trainer:
         self.model = FSDP(
             self.model,
             auto_wrap_policy=auto_wrap_policy,
+            cpu_offload=CPUOffload(offload_params=True),
             device_id=self.local_rank
         )
         
