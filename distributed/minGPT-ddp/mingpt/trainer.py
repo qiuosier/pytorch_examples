@@ -35,6 +35,7 @@ class TrainerConfig:
     save_every: int = None
     use_amp: bool = None
     distributed_method: str = 'ddp'
+    cpu_offload: bool = False
 
 @dataclass
 class Snapshot:
@@ -95,11 +96,12 @@ class Trainer:
                 Block,
             }
         )
+        cpu_offload = CPUOffload(offload_params=True) if self.config.cpu_offload else None
         torch.cuda.set_device(self.local_rank)
         self.model = FSDP(
             self.model,
             auto_wrap_policy=auto_wrap_policy,
-            cpu_offload=CPUOffload(offload_params=True),
+            cpu_offload=cpu_offload,
         )
         
     def _prepare_dataloader(self, dataset: Dataset):
