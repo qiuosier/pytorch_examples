@@ -164,7 +164,10 @@ class Trainer:
             targets = targets.to(self.local_rank)
             batch_loss = self._run_batch(source, targets, train)
             if int(time.time() - last_output_time) > 60 or iter % 100 == 0:
-                print(f"[GPU{self.global_rank}] Epoch {epoch} | Iter {iter} | {step_type} Loss {batch_loss:.5f}")
+                print(
+                    f"[GPU{self.global_rank}] Epoch {epoch} | Iter {iter} | {step_type} Loss {batch_loss:.5f}",
+                    flush=True
+                )
                 last_output_time = time.time()
 
     def _save_snapshot(self, epoch):
