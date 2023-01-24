@@ -66,6 +66,8 @@ class Trainer:
         self.model = model
         self.optimizer = optimizer        
         self.save_every = self.config.save_every
+        if self.config.distributed_method != 'ddp':
+            self.config.use_amp = False
         if self.config.use_amp:
             self.scaler = torch.cuda.amp.GradScaler()
         # load snapshot if available. only necessary on the first node.
