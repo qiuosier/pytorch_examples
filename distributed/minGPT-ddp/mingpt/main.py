@@ -18,7 +18,7 @@ def get_train_objs(gpt_cfg: GPTConfig, opt_cfg: OptimizerConfig, data_cfg: DataC
     gpt_cfg.block_size = dataset.block_size
     model = GPT(gpt_cfg)
     n_params = sum(p.numel() for p in model.parameters())
-    print("number of parameters model: %.2fM" % (n_params/1e6,))
+    print("number of parameters in model: %.2fM" % (n_params/1e6,))
     optimizer = create_optimizer(model, opt_cfg)
     
     return model, optimizer, train_set, test_set
