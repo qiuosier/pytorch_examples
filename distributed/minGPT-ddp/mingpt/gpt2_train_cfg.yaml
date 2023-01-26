@@ -13,7 +13,7 @@ trainer_config:
   data_loader_workers: 4
   grad_norm_clip: 1.0
   snapshot_path: gpt_snapshot.pt
-  save_every: 3
+  save_every: 2
   use_amp: True
   distributed_method: ddp
   cpu_offload: False
