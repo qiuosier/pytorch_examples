@@ -20,7 +20,7 @@ import fsspec
 import io
 
 import functools
-from torch.distributed.fsdp import FullyShardedDataParallel as FSDP, CPUOffload
+from torch.distributed.fsdp import FullyShardedDataParallel as FSDP, CPUOffload, MixedPrecision
 from torch.distributed.fsdp.wrap import transformer_auto_wrap_policy
 from model import Block
 
@@ -64,11 +64,11 @@ class Trainer:
         # initialize train states
         self.epochs_run = 0
         self.model = model
-        self.optimizer = optimizer        
+        self.optimizer = optimizer
         self.save_every = self.config.save_every
-        if self.config.distributed_method != 'ddp':
-            self.config.use_amp = False
-        if self.config.use_amp:
+        self.ddp_amp = self.config.use_amp and self.config.distributed_method == 'ddp'
+        if self.ddp_amp:
+            print("Using Mixed Precision for DDP.")
             self.scaler = torch.cuda.amp.GradScaler()
         # load snapshot if available. only necessary on the first node.
         if self.config.snapshot_path is None:
@@ -106,11 +106,24 @@ class Trainer:
             cpu_offload = None
             self.model = self.model.to(self.local_rank)
 
+        if self.config.use_amp:
+            mp_policy = MixedPrecision(
+                param_dtype=torch.float16,
+                # Gradient communication precision.
+                reduce_dtype=torch.float16,
+                # Buffer precision.
+                buffer_dtype=torch.float16,
+            )
+            print("Using Mixed Precision for FSDP.")
+        else:
+            mp_policy = None
+
         torch.cuda.set_device(self.local_rank)
         self.model = FSDP(
             self.model,
             auto_wrap_policy=auto_wrap_policy,
             cpu_offload=cpu_offload,
+            mixed_precision=mp_policy
         )
         
     def _prepare_dataloader(self, dataset: Dataset):
@@ -140,12 +153,12 @@ class Trainer:
 
 
     def _run_batch(self, source, targets, train: bool = True) -> float:
-        with torch.set_grad_enabled(train), torch.amp.autocast(device_type="cuda", dtype=torch.float16, enabled=(self.config.use_amp)):
+        with torch.set_grad_enabled(train), torch.autocast(device_type="cuda", dtype=torch.float16, enabled=self.ddp_amp):
             _, loss = self.model(source, targets)
         
         if train:
             self.optimizer.zero_grad(set_to_none=True)
-            if self.config.use_amp: 
+            if self.ddp_amp:
                 self.scaler.scale(loss).backward()
                 torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.config.grad_norm_clip)
                 self.scaler.step(self.optimizer)
