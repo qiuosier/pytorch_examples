@@ -1,3 +1,4 @@
+import os
 import torch
 from torch.utils.data import Dataset
 import fsspec
@@ -17,7 +18,13 @@ class DataConfig:
 class CharDataset(Dataset):
 
     def __init__(self, data_cfg: DataConfig): #data_path: str, block_size):
-        data = fsspec.open(data_cfg.path).open().read().decode('utf-8')
+        if data_cfg.path:
+            input_data_path = data_cfg.path
+        else:
+            input_data_path = os.path.join(os.path.dirname(__file__), "data", "input.txt")
+
+        data = fsspec.open(input_data_path).open().read().decode('utf-8')
+
         data = data[ : int(len(data) * data_cfg.truncate)]
 
         chars = sorted(list(set(data)))
