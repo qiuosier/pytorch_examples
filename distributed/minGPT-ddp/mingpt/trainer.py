@@ -20,7 +20,8 @@ import fsspec
 import io
 
 import functools
-from torch.distributed.fsdp import FullyShardedDataParallel as FSDP, CPUOffload, MixedPrecision
+from torch.distributed.fsdp import FullyShardedDataParallel as FSDP
+from torch.distributed.fsdp import CPUOffload, MixedPrecision, FullStateDictConfig, StateDictType
 from torch.distributed.fsdp.wrap import transformer_auto_wrap_policy
 from model import Block
 
@@ -70,16 +71,21 @@ class Trainer:
         if self.ddp_amp:
             print("Using Mixed Precision for DDP.")
             self.scaler = torch.cuda.amp.GradScaler()
+
+        self.fsdp_save_policy = FullStateDictConfig(offload_to_cpu=True, rank0_only=True)
+
         # load snapshot if available. only necessary on the first node.
         if self.config.snapshot_path is None:
             self.config.snapshot_path = "snapshot.pt"
         self._load_snapshot()
+
         # wrap with distributed_method. this step will synch model across all the processes.
         print(f"Using {self.config.distributed_method} ...")
         {
             "ddp": self._ddp,
             "fsdp": self._fsdp
         }[self.config.distributed_method]()
+
 
     def _ddp(self):
         self.model = self.model.to(self.local_rank)
@@ -185,15 +191,30 @@ class Trainer:
                 )
                 last_output_time = time.time()
 
+    def _prepare_ddp_snapshot(self, model, epoch):
+        return Snapshot(
+            model_state=model.state_dict(),
+            optimizer_state=self.optimizer.state_dict(),
+            finished_epoch=epoch
+        )
+
+    def _prepare_fsdp_snapshot(self, model, epoch):
+        with FSDP.state_dict_type(model, StateDictType.FULL_STATE_DICT, self.fsdp_save_policy):
+            return Snapshot(
+                model_state=model.state_dict(),
+                optimizer_state=self.optimizer.state_dict(),
+                finished_epoch=epoch
+            )
+
     def _save_snapshot(self, epoch):
         # capture snapshot
         model = self.model
         raw_model = model.module if hasattr(model, "module") else model
-        snapshot = Snapshot(
-            model_state=raw_model.state_dict(),
-            optimizer_state=self.optimizer.state_dict(),
-            finished_epoch=epoch
-        )
+        snapshot = {
+            "ddp": self._prepare_ddp_snapshot,
+            "fsdp": self._prepare_fsdp_snapshot
+        }[self.config.distributed_method](raw_model, epoch)
+
         # save snapshot
         snapshot = asdict(snapshot)
         if self.config.snapshot_path.startswith("s3://"):
