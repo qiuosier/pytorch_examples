@@ -1,5 +1,5 @@
 data_config:
-  path: distributed/minGPT-ddp/mingpt/data/input.txt
+  path: # defaults to distributed/minGPT-ddp/mingpt/data/input.txt
   block_size: 128
   train_split: 0.9
   truncate: 0.05
