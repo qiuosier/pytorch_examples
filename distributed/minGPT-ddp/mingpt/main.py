@@ -4,7 +4,7 @@ from char_dataset import CharDataset, DataConfig
 from torch.utils.data import random_split
 from omegaconf import DictConfig
 import hydra
-from torch.distributed import init_process_group, destroy_process_group
+from torch.distributed import init_process_group, destroy_process_group, barrier
 
 def ddp_setup():
     init_process_group(backend="nccl")
@@ -36,6 +36,10 @@ def main(cfg: DictConfig):
     trainer = Trainer(trainer_cfg, model, optimizer, train_data, test_data)
     trainer.train()
 
+    print("Synchronizing all processes...")
+    barrier()
+
+    print("Destroying the process group...")
     destroy_process_group()
 
 
