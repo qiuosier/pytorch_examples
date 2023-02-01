@@ -184,8 +184,8 @@ class Trainer:
     def _run_epoch(self, epoch: int, dataloader: DataLoader, train: bool = True):
         dataloader.sampler.set_epoch(epoch)
         last_output_time = time.time()
+        step_type = "Train" if train else "Eval"
         for iter, (source, targets) in enumerate(dataloader):
-            step_type = "Train" if train else "Eval"
             source = source.to(self.local_rank)
             targets = targets.to(self.local_rank)
             batch_loss = self._run_batch(source, targets, train)
@@ -195,6 +195,7 @@ class Trainer:
                     flush=True
                 )
                 last_output_time = time.time()
+        print(f"[GPU{self.global_rank}] Epoch {epoch} | {step_type} Finished.")
 
     def _prepare_ddp_snapshot(self, model, epoch):
         return Snapshot(
@@ -240,3 +241,4 @@ class Trainer:
             # eval run
             if self.test_loader:
                 self._run_epoch(epoch, self.test_loader, train=False)
+        print(f"[GPU{self.global_rank}] Finished Training.")

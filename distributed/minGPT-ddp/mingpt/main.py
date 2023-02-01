@@ -36,10 +36,10 @@ def main(cfg: DictConfig):
     trainer = Trainer(trainer_cfg, model, optimizer, train_data, test_data)
     trainer.train()
 
-    print("Synchronizing all processes...", flush=True)
+    print(f"[GPU{trainer.global_rank}] Waiting for other processes...", flush=True)
     barrier()
 
-    print("Destroying the process group...", flush=True)
+    print(f"[GPU{trainer.global_rank}] Destroying the process group...", flush=True)
     destroy_process_group()
 
 
