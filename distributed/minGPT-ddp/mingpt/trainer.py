@@ -197,14 +197,14 @@ class Trainer:
                 last_output_time = time.time()
         print(f"[GPU{self.global_rank}] Epoch {epoch} | {step_type} Finished.")
 
-    def _prepare_ddp_snapshot(self, model, epoch):
+    def _capture_ddp_snapshot(self, model, epoch):
         return Snapshot(
             model_state=model.state_dict(),
             optimizer_state=self.optimizer.state_dict(),
             finished_epoch=epoch
         )
 
-    def _prepare_fsdp_snapshot(self, model, epoch):
+    def _capture_fsdp_snapshot(self, model, epoch):
         with FSDP.state_dict_type(model, StateDictType.FULL_STATE_DICT, self.fsdp_save_policy):
             return Snapshot(
                 model_state=model.state_dict(),
@@ -212,17 +212,16 @@ class Trainer:
                 finished_epoch=epoch
             )
 
-    def _save_snapshot(self, epoch):
-        # capture snapshot
+    def _capture_snapshot(self, epoch):
         model = self.model
         raw_model = model.module if hasattr(model, "module") else model
         snapshot = {
-            "ddp": self._prepare_ddp_snapshot,
-            "fsdp": self._prepare_fsdp_snapshot
+            "ddp": self._capture_ddp_snapshot,
+            "fsdp": self._capture_fsdp_snapshot
         }[self.config.distributed_method](raw_model, epoch)
+        return asdict(snapshot)
 
-        # save snapshot
-        snapshot = asdict(snapshot)
+    def _save_snapshot(self, epoch, snapshot):
         if self.config.snapshot_path.startswith("s3://"):
             upload_to_s3(snapshot, self.config.snapshot_path)
         else:
@@ -236,8 +235,10 @@ class Trainer:
             epoch_start_time = time.time()
             self._run_epoch(epoch, self.train_loader, train=True)
             print(f"Epoch {epoch} Training Time: {str(int(time.time() - epoch_start_time))}")
-            if self.local_rank == 0 and epoch % self.save_every == 0:
-                self._save_snapshot(epoch)
+            if epoch % self.save_every == 0:
+                snapshot = self._capture_snapshot(epoch)
+                if self.global_rank == 0:
+                    self._save_snapshot(epoch, snapshot)
             # eval run
             if self.test_loader:
                 self._run_epoch(epoch, self.test_loader, train=False)
