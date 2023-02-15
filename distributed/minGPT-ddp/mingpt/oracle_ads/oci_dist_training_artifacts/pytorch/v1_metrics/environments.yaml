@@ -1,0 +1,15 @@
+channels:
+  - conda-forge
+dependencies:
+  - git
+  - openssh
+  - socat
+  - pip
+  - pip:
+    - oracle-ads>=2.6.8
+    - fsspec
+    - boto3
+    - hydra-core
+    - requests
+    - aiohttp
+

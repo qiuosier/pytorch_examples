@@ -1,0 +1,50 @@
+kind: distributed
+apiVersion: v1.0
+spec:
+  name: PyTorch-MinGPT
+  infrastructure:
+    kind: infrastructure
+    type: dataScienceJob
+    apiVersion: v1.0
+    spec:
+      projectId: <>
+      compartmentId: <>
+      displayName: PyTorch-MinGPT
+      logGroupId: <>
+      logId: <>
+      subnetId: <>
+      shapeName: VM.GPU3.1
+      blockStorageSize: 50
+  cluster:
+    kind: PYTORCH
+    apiVersion: v1.0
+    spec:
+      image: <>
+      workDir: "<>"
+      config:
+        env:
+          - name: NCCL_ASYNC_ERROR_HANDLING
+            value: "1"
+      main:
+        name: PyTorch-MinGPT-main
+        replicas: 1
+      worker:
+        name: PyTorch-MinGPT-worker
+        replicas: 1
+  runtime:
+    apiVersion: v1.0
+    kind: python
+    type: "git"
+    spec:
+      uri: "https://github.com/qiuosier/pytorch_examples.git"
+      branch: "minGPT"
+      entryPoint: "distributed/minGPT-ddp/mingpt/main.py"
+      codeDir: "/pytorch"
+      args:
+        - trainer_config.distributed_method=fsdp
+        - trainer_config.data_loader_workers=4
+        - trainer_config.max_epochs=2
+        - trainer_config.batch_size=48
+        - gpt_config.n_layer=24
+        - gpt_config.n_head=16
+        - gpt_config.n_embd=1024
