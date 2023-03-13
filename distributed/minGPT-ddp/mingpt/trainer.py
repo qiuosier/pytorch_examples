@@ -203,7 +203,7 @@ class Trainer:
         # Get a rough estimate of the loss over all batches in all nodes
         if step_type == "Eval" and self.global_rank == 0:
             local_epoch_loss = batch_loss_list.mean()
-            epoch_loss_list = [torch.zeros(1) for _ in range(int(os.environ["WORLD_SIZE"]))]
+            epoch_loss_list = [torch.zeros(1).to(self.local_rank) for _ in range(int(os.environ["WORLD_SIZE"]))]
             all_gather(epoch_loss_list, local_epoch_loss)
             epoch_loss_list = torch.stack(epoch_loss_list)
             epoch_loss = epoch_loss_list.mean()
