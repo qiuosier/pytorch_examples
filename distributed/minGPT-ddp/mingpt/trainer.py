@@ -201,7 +201,7 @@ class Trainer:
         print(f"[GPU{self.global_rank}] Epoch {epoch} | {step_type} Finished.")
         local_epoch_loss = batch_loss_list.mean().to(self.local_rank)
         # Get a rough estimate of the loss over all batches in all nodes
-        if step_type == "Eval" and self.global_rank == 0:
+        if step_type == "Eval":
             epoch_loss_list = [torch.zeros(1).to(self.local_rank) for _ in range(int(os.environ["WORLD_SIZE"]))]
             all_gather(epoch_loss_list, local_epoch_loss)
             epoch_loss_list = torch.stack(epoch_loss_list)
