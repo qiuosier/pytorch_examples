@@ -20,6 +20,7 @@ import fsspec
 import io
 
 import functools
+from torch.distributed import all_gather_into_tensor
 from torch.distributed.fsdp import FullyShardedDataParallel as FSDP
 from torch.distributed.fsdp import CPUOffload, MixedPrecision, FullStateDictConfig, StateDictType
 from torch.distributed.fsdp.wrap import transformer_auto_wrap_policy
@@ -179,23 +180,33 @@ class Trainer:
                 torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.config.grad_norm_clip)
                 self.optimizer.step()
         
-        return loss.item()
+        return loss
 
     def _run_epoch(self, epoch: int, dataloader: DataLoader, train: bool = True):
         dataloader.sampler.set_epoch(epoch)
         last_output_time = time.time()
         step_type = "Train" if train else "Eval"
+        batch_loss_list = torch.zeros(len(dataloader))
         for iter, (source, targets) in enumerate(dataloader):
             source = source.to(self.local_rank)
             targets = targets.to(self.local_rank)
             batch_loss = self._run_batch(source, targets, train)
+            batch_loss_list[iter] = batch_loss
             if int(time.time() - last_output_time) > 60 or iter % 100 == 0:
                 print(
-                    f"[GPU{self.global_rank}] Epoch {epoch} | Iter {iter} | {step_type} Loss {batch_loss:.5f}",
+                    f"[GPU{self.global_rank}] Epoch {epoch} | Iter {iter} | {step_type} Loss {batch_loss.item():.5f}",
                     flush=True
                 )
                 last_output_time = time.time()
         print(f"[GPU{self.global_rank}] Epoch {epoch} | {step_type} Finished.")
+
+        # Get a rough estimate of the loss over all batches in all nodes
+        if step_type == "Eval" and self.global_rank == 0:
+            local_epoch_loss = batch_loss_list.mean()
+            epoch_loss_list = torch.zeros(int(os.environ["WORLD_SIZE"]))
+            all_gather_into_tensor(epoch_loss_list, local_epoch_loss)
+            epoch_loss = epoch_loss_list.mean()
+            print(f"Epoch {epoch} Average Loss {epoch_loss.item()}.")
 
     def _capture_ddp_snapshot(self, model, epoch):
         return Snapshot(
