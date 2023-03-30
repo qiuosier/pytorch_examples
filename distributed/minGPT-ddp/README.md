@@ -1,9 +1,9 @@
 # minGPT-DDP
 
-Code accompanying the tutorial at https://pytorch.org/tutorials/intermediate/ddp_minGPT.html for training a GPT-like model with Distributed Data Parallel (DDP) and [Fully Sharded Data Parallel (FSDP)](https://pytorch.org/blog/introducing-pytorch-fully-sharded-data-parallel-api/) in PyTorch.
+Code accompanying the tutorial at https://pytorch.org/tutorials/intermediate/ddp_minGPT.html for training a GPT-like model with Distributed Data Parallel (DDP) in PyTorch.
 
-The code is updated based the [PyTorch Examples](https://github.com/pytorch/examples/tree/main/distributed/minGPT-ddp) to add FSDP support.
-Compare with main to see the code changes: https://github.com/qiuosier/pytorch_examples/compare/main...qiuosier:pytorch_examples:minGPT
+The code is updated based on the [PyTorch examples](https://github.com/pytorch/examples/tree/main/distributed/minGPT-ddp) to add [Fully Sharded Data Parallel (FSDP)](https://pytorch.org/blog/introducing-pytorch-fully-sharded-data-parallel-api/) support.
+Compare with main to see the code changes: https://github.com/qiuosier/pytorch_examples/compare/main..qiuosier:pytorch_examples:minGPT
 
 Files marked with an asterisk (*) are adapted from the minGPT repo (https://github.com/karpathy/minGPT).
 Files marked with an hashtag(#) are newly added in addition to the file from [PyTorch Examples](https://github.com/pytorch/examples/tree/main/distributed/minGPT-ddp)
@@ -16,6 +16,7 @@ Files marked with an hashtag(#) are newly added in addition to the file from [Py
 - [slurm/](mingpt/slurm) contains files for setting up an AWS cluster and the slurm script to run multinode training.
 - [model_size.py #](mingpt/model_size.py) is a script to calculate the number of parameters and the file size of the models.
 - [launch.py #](mingpt/launch.py) is a script to launch the training on a single machine. The number of processes will be set to the number of GPUs.
+- [oci_dist_training_artifacts #](mingpt/oci_dist_training_artifacts) contains the artifacts for running [Distributed Training Job on Oracle Cloud Infrastructure (OCI)](https://accelerated-data-science.readthedocs.io/en/latest/user_guide/model_training/distributed_training/overview.html).
 
 ## Command Line Arguments
 
