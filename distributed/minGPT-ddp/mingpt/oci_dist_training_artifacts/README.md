@@ -1,8 +1,9 @@
 # Training minGPT on Oracle Cloud Infrastructure using Oracle ADS
 
-Here are the steps to train the minGPT model on Oracle Cloud Infrastructure using Oracle ADS:
+Here are the steps to train the minGPT model on [Oracle Cloud Infrastructure (OCI)]((https://docs.oracle.com/en-us/iaas/Content/home.htm)) using [Oracle ADS](https://accelerated-data-science.readthedocs.io/en/latest/index.html):
 
 1. Configure your access to OCI Data Science, Container Registry and Object Storage.
+2. Clone this repository and navigate to `distributed/minGPT-ddp/mingpt` directory.
 2. Build the container image.
     ```
     export IMAGE_NAME=<region.ocir.io/my-tenancy/image-name>

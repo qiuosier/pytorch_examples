@@ -6,10 +6,7 @@ dependencies:
   - socat
   - pip
   - pip:
-    - oracle-ads>=2.6.8
-    - fsspec
+    - oracle-ads>=2.8.3
     - boto3
     - hydra-core
-    - requests
     - aiohttp
-

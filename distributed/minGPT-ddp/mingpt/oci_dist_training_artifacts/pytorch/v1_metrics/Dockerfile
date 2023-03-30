@@ -1,16 +1,14 @@
-#FROM pytorch/pytorch:1.11.0-cuda11.3-cudnn8-runtime AS base
 FROM pytorch/pytorch:1.12.1-cuda11.3-cudnn8-runtime AS base
 
 # Create working directory
-ENV HOME /home/oci_dist_training
-RUN mkdir -p /etc/datascience
-WORKDIR /etc/datascience
+ENV HOME /home/datascience
+RUN mkdir -p /home/datascience
+WORKDIR /home/datascience
 
 # Create sync directory and expose as environment variable
 RUN mkdir /opt/ml
 ENV OCI__SYNC_DIR=/opt/ml
 
-#RUN curl -Lo /tmp/oci-cli-installer.sh https://raw.githubusercontent.com/oracle/oci-cli/master/scripts/install/install.sh && \
 RUN apt-get update && \
     apt-get install -y curl
 
@@ -36,23 +34,15 @@ RUN curl -Lo /tmp/oci-cli-installer.sh https://raw.githubusercontent.com/oracle/
 ARG ARTIFACT_DIR=oci_dist_training_artifacts/pytorch/v1_metrics
 ARG CONDA_ENV_FILE=environments.yaml
 
-
-COPY ${ARTIFACT_DIR}/${CONDA_ENV_FILE} /etc/datascience/${CONDA_ENV_FILE}
+# Copy artifacts
+COPY ${ARTIFACT_DIR} ${HOME}
+# Install dependencies
 RUN /opt/conda/bin/conda env update -n base --file ${CONDA_ENV_FILE}
-COPY ${ARTIFACT_DIR}/pytorch_cluster.py /etc/datascience/pytorch_cluster.py
-COPY ${ARTIFACT_DIR}/oci_metrics.py /etc/datascience/oci_metrics.py
-COPY ${ARTIFACT_DIR}/custom_metrics_provider.py /etc/datascience/custom_metrics_provider.py
-COPY ${ARTIFACT_DIR}/gpu_metrics_provider.py /etc/datascience/gpu_metrics_provider.py
-COPY ${ARTIFACT_DIR}/run.py /etc/datascience/run.py
-COPY ${ARTIFACT_DIR}/run.sh /etc/datascience/run.sh
-
-RUN chmod u+x /etc/datascience/run.sh
-
 
 # Copy user code
 ARG CODE_DIR=.
-COPY ${CODE_DIR} /code
+RUN mkdir -p ${HOME}/code
+COPY ${CODE_DIR} ${HOME}/code
 
-ENTRYPOINT ["/etc/datascience/run.sh"]
-
-
+RUN chmod u+x ${HOME}/run.sh
+ENTRYPOINT ["/homne/datascience/run.sh"]
