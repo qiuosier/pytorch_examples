@@ -13,7 +13,7 @@ spec:
       logGroupId: <>
       logId: <>
       subnetId: <>
-      shapeName: VM.GPU3.1
+      shapeName: VM.GPU.A10.1
       blockStorageSize: 50
   cluster:
     kind: PYTORCH
@@ -39,11 +39,11 @@ spec:
       uri: "https://github.com/qiuosier/pytorch_examples.git"
       branch: "minGPT"
       entryPoint: "distributed/minGPT-ddp/mingpt/main.py"
-      codeDir: "/pytorch"
+      codeDir: "/home/datascience/pytorch"
       args:
         - trainer_config.distributed_method=fsdp
         - trainer_config.data_loader_workers=4
-        - trainer_config.max_epochs=2
+        - trainer_config.max_epochs=20
         - trainer_config.batch_size=48
         - gpt_config.n_layer=24
         - gpt_config.n_head=16
