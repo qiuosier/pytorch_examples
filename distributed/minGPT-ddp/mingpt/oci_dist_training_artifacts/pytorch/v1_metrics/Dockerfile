@@ -45,4 +45,4 @@ RUN mkdir -p ${HOME}/code
 COPY ${CODE_DIR} ${HOME}/code
 
 RUN chmod u+x ${HOME}/run.sh
-ENTRYPOINT ["/homne/datascience/run.sh"]
+ENTRYPOINT ["/home/datascience/run.sh"]
