@@ -1,9 +1,9 @@
 FROM pytorch/pytorch:1.12.1-cuda11.3-cudnn8-runtime AS base
 
 # Create working directory
-ENV HOME /home/datascience
-RUN mkdir -p /home/datascience
-WORKDIR /home/datascience
+ENV HOME /etc/datascience
+RUN mkdir -p ${HOME}
+WORKDIR ${HOME}
 
 # Create sync directory and expose as environment variable
 RUN mkdir /opt/ml
@@ -45,4 +45,4 @@ RUN mkdir -p ${HOME}/code
 COPY ${CODE_DIR} ${HOME}/code
 
 RUN chmod u+x ${HOME}/run.sh
-ENTRYPOINT ["/home/datascience/run.sh"]
+ENTRYPOINT ["/etc/datascience/run.sh"]
