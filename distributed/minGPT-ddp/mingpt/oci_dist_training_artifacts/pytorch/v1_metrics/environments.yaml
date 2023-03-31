@@ -6,7 +6,7 @@ dependencies:
   - socat
   - pip
   - pip:
-    - oracle-ads>=2.8.3
+    - oracle-ads==2.8.0
     - boto3
     - hydra-core
     - aiohttp
