@@ -233,12 +233,10 @@ class Trainer:
         return asdict(snapshot)
 
     def _save_snapshot(self, epoch, snapshot):
-        if self.config.snapshot_path.startswith("s3://"):
-            upload_to_s3(snapshot, self.config.snapshot_path)
-        else:
-            torch.save(snapshot, self.config.snapshot_path)
+        with fsspec.open(self.config.snapshot_path, 'w') as fp:
+            torch.save(snapshot, fp)
             
-        print(f"Snapshot saved at epoch {epoch}")
+        print(f"Snapshot saved at epoch {epoch} to {self.config.snapshot_path}")
 
     def train(self):
         for epoch in range(self.epochs_run, self.config.max_epochs):
